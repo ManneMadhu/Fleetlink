@@ -1,25 +1,4 @@
-// // import React from 'react';
-// // import AddVehicle from './pages/AddVehicle';
-// // import SearchBook from './pages/SearchBook';
 
-// // export default function App() {
-// //   return (
-// //     <div style={{ padding: 20 }}>
-// //       <h1>FleetLink (demo)</h1>
-// //       <div style={{ display: 'flex', gap: 40 }}>
-// //         <div style={{ flex: 1 }}>
-// //           <AddVehicle />
-// //         </div>
-// //         <div style={{ flex: 2 }}>
-// //           <SearchBook />
-// //         </div>
-// //       </div>
-// //     </div>
-// //   );
-// // }
-
-
-//  
 
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
