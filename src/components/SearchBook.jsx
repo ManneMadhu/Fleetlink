@@ -1,0 +1,521 @@
+// // import React, { useState } from 'react';
+
+// // function toISOFromLocal(value) {
+// //   if (!value) return null;
+// //   const d = new Date(value);
+// //   return d.toISOString();
+// // }
+
+// // export default function SearchBook() {
+// //   const [capacity, setCapacity] = useState('');
+// //   const [fromPincode, setFromPincode] = useState('');
+// //   const [toPincode, setToPincode] = useState('');
+// //   const [startLocal, setStartLocal] = useState('');
+// //   const [results, setResults] = useState([]);
+// //   const [msg, setMsg] = useState(null);
+
+// //   const handleSearch = async (e) => {
+// //     if (e) e.preventDefault();
+// //     const iso = toISOFromLocal(startLocal);
+// //     const q = new URLSearchParams({
+// //       capacityRequired: capacity,
+// //       fromPincode,
+// //       toPincode,
+// //       startTime: iso
+// //     }).toString();
+// //     try {
+// //       const res = await fetch('http://localhost:5000/api/vehicles/available?' + q);
+// //       const body = await res.json();
+// //       if (!res.ok) throw new Error(body.error || 'Failed');
+// //       setResults(body);
+// //     } catch (err) {
+// //       setMsg('Error: ' + err.message);
+// //     }
+// //   };
+
+// //   const handleBook = async (vehicleId) => {
+// //     const iso = toISOFromLocal(startLocal);
+// //     try {
+// //       const res = await fetch('http://localhost:5000/api/bookings', {
+// //         method: 'POST',
+// //         headers: { 'Content-Type': 'application/json' },
+// //         body: JSON.stringify({
+// //           vehicleId,
+// //           fromPincode,
+// //           toPincode,
+// //           startTime: iso,
+// //           customerId: 'demo-customer-1'
+// //         })
+// //       });
+// //       const body = await res.json();
+// //       if (!res.ok) throw new Error(body.error || 'Failed to book');
+
+// //       // ✅ Show success message
+// //       setMsg(`✅ Booking successful! Vehicle: ${vehicleId}, Booking ID: ${body._id}`);
+
+// //       // Refresh available vehicles without clearing msg
+// //       handleSearch();
+// //     } catch (err) {
+// //       setMsg('Booking error: ' + err.message);
+// //     }
+// //   };
+
+// //   return (
+// //     <div>
+// //       <h2>Search & Book</h2>
+// //       <form onSubmit={handleSearch}>
+// //         <div>
+// //           <label>Capacity Required</label><br />
+// //           <input
+// //             type='number'
+// //             value={capacity}
+// //             onChange={e => setCapacity(e.target.value)}
+// //             required
+// //           />
+// //         </div>
+// //         <div>
+// //           <label>From Pincode</label><br />
+// //           <input
+// //             value={fromPincode}
+// //             onChange={e => setFromPincode(e.target.value)}
+// //             required
+// //           />
+// //         </div>
+// //         <div>
+// //           <label>To Pincode</label><br />
+// //           <input
+// //             value={toPincode}
+// //             onChange={e => setToPincode(e.target.value)}
+// //             required
+// //           />
+// //         </div>
+// //         <div>
+// //           <label>Start Date & Time</label><br />
+// //           <input
+// //             type='datetime-local'
+// //             value={startLocal}
+// //             onChange={e => setStartLocal(e.target.value)}
+// //             required
+// //           />
+// //         </div>
+// //         <button type='submit'>Search Availability</button>
+// //       </form>
+
+// //       {/* ✅ Message will now stay after booking */}
+// //       {msg && <p style={{ color: msg.startsWith('✅') ? 'green' : 'red' }}>{msg}</p>}
+
+// //       <h3>Results</h3>
+// //       <div>
+// //         {results.length === 0 && <p>No vehicles available</p>}
+// //         {results.map(v => (
+// //           <div
+// //             key={v._id}
+// //             style={{ border: '1px solid #ddd', padding: 8, marginBottom: 6 }}
+// //           >
+// //             <div><strong>{v.name}</strong></div>
+// //             <div>Capacity: {v.capacityKg} kg</div>
+// //             <div>Tyres: {v.tyres}</div>
+// //             <div>Estimated Duration (hours): {v.estimatedRideDurationHours}</div>
+// //             <button onClick={() => handleBook(v._id)}>Book Now</button>
+// //           </div>
+// //         ))}
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
+
+// import React, { useState } from 'react';
+// import DatePicker from 'react-datepicker';
+// import 'react-datepicker/dist/react-datepicker.css';
+
+// function toISOFromLocal(value) {
+//   if (!value) return null;
+//   const d = new Date(value);
+//   return d.toISOString();
+// }
+
+// export default function SearchBook() {
+//   const [capacity, setCapacity] = useState('');
+//   const [fromPincode, setFromPincode] = useState('');
+//   const [toPincode, setToPincode] = useState('');
+//   const [startLocal, setStartLocal] = useState(null);
+//   const [results, setResults] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [vehicleMsgs, setVehicleMsgs] = useState({}); // per-vehicle message
+
+//   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+//   const handleSearch = async (e) => {
+//     if (e && e.preventDefault) e.preventDefault();
+//     const iso = toISOFromLocal(startLocal);
+//     const q = new URLSearchParams({
+//       capacityRequired: capacity,
+//       fromPincode,
+//       toPincode,
+//       startTime: iso
+//     }).toString();
+//     try {
+//       setLoading(true);
+//       const res = await fetch(`${apiBase}/api/vehicles/available?` + q);
+//       const body = await res.json();
+//       if (!res.ok) throw new Error(body.error || 'Failed to fetch');
+//       setResults(body);
+//     } catch (err) {
+//       alert('Search error: ' + err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleBook = async (vehicleId) => {
+//     const iso = toISOFromLocal(startLocal);
+//     try {
+//       setVehicleMsgs(prev => ({ ...prev, [vehicleId]: 'Booking...' }));
+//       const res = await fetch(`${apiBase}/api/bookings`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           vehicleId,
+//           fromPincode,
+//           toPincode,
+//           startTime: iso,
+//           customerId: 'demo-customer-1'
+//         })
+//       });
+//       const body = await res.json();
+//       if (!res.ok) throw new Error(body.error || 'Failed to book');
+
+//       const bookingId = body._id || body.id || (body.created && body.created._id) || 'unknown-id';
+//       setVehicleMsgs(prev => ({ ...prev, [vehicleId]: `✅ Booked (ID: ${bookingId})` }));
+//       // refresh list silently
+//       handleSearch();
+//     } catch (err) {
+//       setVehicleMsgs(prev => ({ ...prev, [vehicleId]: 'Booking error: ' + err.message }));
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <h2>Search & Book</h2>
+//       <form onSubmit={handleSearch}>
+//         <div>
+//           <label>Capacity Required</label><br />
+//           <input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} required />
+//         </div>
+//         <div>
+//           <label>From Pincode</label><br />
+//           <input value={fromPincode} onChange={e => setFromPincode(e.target.value)} required />
+//         </div>
+//         <div>
+//           <label>To Pincode</label><br />
+//           <input value={toPincode} onChange={e => setToPincode(e.target.value)} required />
+//         </div>
+//         <div>
+//           <label>Start Date & Time</label><br />
+//           {/* react-datepicker as nicer control */}
+//           <DatePicker
+//             selected={startLocal}
+//             onChange={date => setStartLocal(date)}
+//             showTimeSelect
+//             timeIntervals={15}
+//             dateFormat="yyyy-MM-dd HH:mm"
+//             placeholderText="Select start date & time"
+//             required
+//           />
+//         </div>
+//         <div style={{ marginTop: 8 }}>
+//           <button type="submit" disabled={loading}>{loading ? 'Searching...' : 'Search Availability'}</button>
+//         </div>
+//       </form>
+
+//       <h3 style={{ marginTop: 12 }}>Results</h3>
+//       <div>
+//         {loading && <p>Loading vehicles…</p>}
+//         {!loading && results.length === 0 && <p>No vehicles available</p>}
+//         {results.map(v => (
+//           <div key={v._id} style={{ border: '1px solid #ddd', padding: 8, marginBottom: 6 }}>
+//             <div><strong>{v.name}</strong></div>
+//             <div>Capacity: {v.capacityKg ?? v.capacity} kg</div>
+//             <div>Tyres: {v.tyres}</div>
+//             <div>Estimated Duration (hours): {v.estimatedRideDurationHours}</div>
+//             <div style={{ marginTop: 8 }}>
+//               <button onClick={() => handleBook(v._id)}>Book Now</button>
+//             </div>
+//             {vehicleMsgs[v._id] && <div style={{ marginTop: 6 }}>{vehicleMsgs[v._id]}</div>}
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+function toISOFromLocal(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return d.toISOString();
+}
+
+export default function SearchBook() {
+  const [capacity, setCapacity] = useState("");
+  const [fromPincode, setFromPincode] = useState("");
+  const [toPincode, setToPincode] = useState("");
+  const [startLocal, setStartLocal] = useState(null);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [vehicleMsgs, setVehicleMsgs] = useState({});
+
+  const apiBase = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+  const handleSearch = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const iso = toISOFromLocal(startLocal);
+    const q = new URLSearchParams({
+      capacityRequired: capacity,
+      fromPincode,
+      toPincode,
+      startTime: iso,
+    }).toString();
+    try {
+      setLoading(true);
+      const res = await fetch(`${apiBase}/api/vehicles/available?` + q);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to fetch");
+      setResults(body);
+    } catch (err) {
+      alert("Search error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBook = async (vehicleId) => {
+    const iso = toISOFromLocal(startLocal);
+    try {
+      setVehicleMsgs((prev) => ({ ...prev, [vehicleId]: "Booking..." }));
+      const res = await fetch(`${apiBase}/api/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleId,
+          fromPincode,
+          toPincode,
+          startTime: iso,
+          customerId: "demo-customer-1",
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to book");
+
+      const bookingId =
+        body._id ||
+        body.id ||
+        (body.created && body.created._id) ||
+        "unknown-id";
+      setVehicleMsgs((prev) => ({
+        ...prev,
+        [vehicleId]: `✅ Booked (ID: ${bookingId})`,
+      }));
+      handleSearch();
+    } catch (err) {
+      setVehicleMsgs((prev) => ({
+        ...prev,
+        [vehicleId]: "Booking error: " + err.message,
+      }));
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.overlay}></div>
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <h2 style={styles.title}>🔍 Search & Book</h2>
+
+          <form onSubmit={handleSearch} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Capacity Required</label>
+              <input
+                type="number"
+                style={styles.input}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                required
+              />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>From Pincode</label>
+              <input
+                style={styles.input}
+                value={fromPincode}
+                onChange={(e) => setFromPincode(e.target.value)}
+                required
+              />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>To Pincode</label>
+              <input
+                style={styles.input}
+                value={toPincode}
+                onChange={(e) => setToPincode(e.target.value)}
+                required
+              />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Start Date & Time</label>
+              <DatePicker
+                selected={startLocal}
+                onChange={(date) => setStartLocal(date)}
+                showTimeSelect
+                timeIntervals={15}
+                dateFormat="yyyy-MM-dd HH:mm"
+                placeholderText="Select start date & time"
+                required
+                className="datepicker-input"
+                style={styles.input}
+              />
+            </div>
+            <button type="submit" style={styles.button} disabled={loading}>
+              {loading ? "Searching..." : "Search Availability"}
+            </button>
+          </form>
+
+          <h3 style={{ marginTop: 20 }}>Results</h3>
+          {loading && <p>Loading vehicles…</p>}
+          {!loading && results.length === 0 && <p>No vehicles available</p>}
+          <div style={styles.list}>
+            {results.map((v) => (
+              <div key={v._id} style={styles.resultItem}>
+                <div>
+                  <strong>{v.name}</strong>
+                </div>
+                <div>Capacity: {v.capacityKg ?? v.capacity} kg</div>
+                <div>Tyres: {v.tyres}</div>
+                <div>
+                  Estimated Duration (hours): {v.estimatedRideDurationHours}
+                </div>
+                <button
+                  onClick={() => handleBook(v._id)}
+                  style={styles.bookButton}
+                >
+                  Book Now
+                </button>
+                {vehicleMsgs[v._id] && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      color: vehicleMsgs[v._id].startsWith("✅")
+                        ? "green"
+                        : "red",
+                    }}
+                  >
+                    {vehicleMsgs[v._id]}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    position: "relative",
+    minHeight: "100vh",
+    backgroundImage:
+      "url('https://images.unsplash.com/photo-1542365885-7c5f3a54d9c3?auto=format&fit=crop&w=1400&q=80')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.5)",
+  },
+  container: {
+    position: "relative",
+    zIndex: 1,
+    width: "100%",
+    maxWidth: "800px",
+  },
+  card: {
+    background: "#fff",
+    padding: "30px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+  },
+  title: {
+    marginBottom: "20px",
+    color: "#333",
+    textAlign: "center",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    marginBottom: "20px",
+  },
+  inputGroup: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  label: {
+    fontSize: "14px",
+    fontWeight: "bold",
+    marginBottom: "5px",
+    color: "#555",
+  },
+  input: {
+    padding: "10px",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "14px",
+  },
+  button: {
+    background: "#007bff",
+    color: "#fff",
+    padding: "12px",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "16px",
+    cursor: "pointer",
+    transition: "0.2s ease",
+  },
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+  },
+  resultItem: {
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    padding: "15px",
+    background: "#f9f9f9",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+  },
+  bookButton: {
+    background: "#28a745",
+    color: "#fff",
+    border: "none",
+    padding: "8px 12px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    marginTop: "10px",
+  },
+};
